@@ -1,0 +1,7 @@
+FROM selenium/standalone-chrome:latest
+WORKDIR /home/seluser
+COPY . .
+RUN sudo apt update && sudo apt install -y python3-pip
+RUN sudo pip install scapy && sudo pip install selenium
+# CMD ["sudo", "python3", "main.py", "$file_name", "$max_turn"]
+CMD sudo python3 main.py $file_name $max_turn
