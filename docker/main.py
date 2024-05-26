@@ -3,7 +3,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, WebDriverException
 import time
 import sniffer
 import json
@@ -33,8 +33,13 @@ def visit(file_name, turn):
             # 广告检测
             while should_loop:
                 sniffer_.run(tag = f'{line.strip()}')
-                driver = webdriver.Chrome(options=options)
-                driver.execute_script(f'window.location.replace("{url}");')
+                while True:
+                    try:
+                        driver = webdriver.Chrome(options=options)
+                        driver.execute_script(f'window.location.replace("{url}");')
+                        break
+                    except:
+                        pass
                 try:
                     ad_element = WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, 'div.ytp-ad-player-overlay-layout')))
@@ -56,6 +61,12 @@ def visit(file_name, turn):
                 except TimeoutException:
                     print('未遇到广告')
                     should_loop = False
+                except WebDriverException:
+                    print('页面崩溃：', traceback.format_exc())
+                    sys.stdout.flush()
+                    sniffer_.stop(if_save=False)
+                    driver.quit()
+                    continue
             sys.stdout.flush()
             try:
                 # 以及读取总时长
@@ -74,8 +85,8 @@ def visit(file_name, turn):
             except:
                 print('读取时长和等待播放时异常退出: ', traceback.format_exc())
                 sys.stdout.flush()
-                driver.quit()
                 sniffer_.stop(if_save=False)
+                driver.quit()
                 continue
             # 等待现在播放进度等于总时长
             try:
@@ -83,11 +94,7 @@ def visit(file_name, turn):
                     EC.text_to_be_present_in_element((By.CSS_SELECTOR, 'span.ytp-time-current'), time_duration)
                 )
             except:
-                print('播放时异常退出: ', traceback.format_exc())
-                sys.stdout.flush()
-                driver.quit()
-                sniffer_.stop(if_save=False)
-                continue
+                pass
             time.sleep(1)
             print('播放结束')
             sys.stdout.flush()

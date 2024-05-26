@@ -23,7 +23,7 @@ class Sniffer:
         self.stop_sniff = False
         self.tag = tag
         self.thread = threading.Thread(target=
-                                       lambda: sniff(iface='WLAN', 
+                                       lambda: sniff(iface='eth0', 
                                                      prn=self._ingest_packet, 
                                                      stop_filter=self._stop_sniff))
         self.thread.start()
